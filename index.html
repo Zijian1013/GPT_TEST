@@ -1,245 +1,431 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPT聊天机器人</title>
+    <title>GPT-4  聊天机器人</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            line-height: 1.6;
             padding: 20px;
-        }
-
-        .chat-container {
-            width: 100%;
             max-width: 800px;
+            margin: 0 auto;
+            background: #f5f5f5;
+        }
+        .container {
             background: white;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .chat-header {
-            background: #343541;
-            color: white;
-            padding: 15px;
-            text-align: center;
-        }
-
-        .chat-messages {
             padding: 20px;
-            height: 500px;
-            overflow-y: auto;
-            background: #ffffff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-
+        #chat-box {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
         .message {
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background: #e3f2fd;
+            margin-left: 20%;
+        }
+        .bot-message {
+            background: #f5f5f5;
+            margin-right: 20%;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .input-container {
             display: flex;
             flex-direction: column;
+            gap: 10px;
         }
-
-        .user-message {
-            align-items: flex-end;
-        }
-
-        .bot-message {
+        .input-row {
+            display: flex;
+            gap: 10px;
             align-items: flex-start;
         }
-
-        .message-content {
-            max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin: 5px 0;
-            word-wrap: break-word;
-            line-height: 1.5;
-        }
-
-        .user-message .message-content {
-            background: #343541;
-            color: white;
-        }
-
-        .bot-message .message-content {
-            background: #f7f7f8;
-            color: #000;
-        }
-
-        .chat-input {
-            display: flex;
-            padding: 15px;
-            background: #ffffff;
-            border-top: 1px solid #ddd;
-        }
-
-        #message-input {
+        #user-input {
             flex: 1;
-            padding: 12px;
+            padding: 8px;
             border: 1px solid #ddd;
             border-radius: 5px;
-            margin-right: 10px;
-            outline: none;
-            font-size: 14px;
+            resize: vertical;
+            min-height: 60px;
         }
-
-        #send-button {
-            padding: 10px 20px;
-            background: #343541;
+        .action-button {
+            padding: 8px;
+            background: #1976d2;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            height: 40px;
         }
-
-        #send-button:hover {
-            background: #444654;
+        .action-button:hover {
+            background: #1565c0;
         }
-
+        .action-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
         .loading {
-            display: inline-block;
-            margin-left: 10px;
+            display: none;
+            margin: 10px 0;
+            color: #666;
         }
-
-        .loading span {
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            background-color: #666;
+        #image-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .preview-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        }
+        .preview-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .remove-image {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
             border-radius: 50%;
-            margin: 0 2px;
-            animation: loading 1.4s infinite;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
         }
-
-        .loading span:nth-child(2) { animation-delay: 0.2s; }
-        .loading span:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes loading {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
+        .chat-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+        .add-image-button {
+            font-size: 24px;
+            line-height: 1;
+        }
+        #file-input {
+            display: none;
+        }
+        /* Markdown 样式 */
+        .bot-message h3 {
+            margin: 15px 0 10px 0;
+            color: #2c3e50;
+        }
+        .bot-message ul, .bot-message ol {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+        .bot-message p {
+            margin-bottom: 10px;
+        }
+        .bot-message strong {
+            color: #2c3e50;
+        }
+        .math {
+            font-family: 'Computer Modern', serif;
+        }
+        code {
+            background: #f8f9fa;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        blockquote {
+            border-left: 4px solid #ddd;
+            padding-left: 10px;
+            margin: 10px 0;
+            color: #666;
         }
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-header">
-            <h2>GPT聊天机器人</h2>
+    <div class="container">
+        <h1>GPT-4 Vision 聊天机器人</h1>
+        <div id="chat-box"></div>
+        <div class="input-container">
+            <div id="image-preview"></div>
+            <div class="input-row">
+                <textarea id="user-input" placeholder="输入您的消息..."></textarea>
+                <input type="file" id="file-input" accept="image/*" multiple>
+                <button class="action-button add-image-button" onclick="document.getElementById('file-input').click()">+</button>
+                <button id="send-button" class="action-button" onclick="sendMessage()">发送</button>
+            </div>
         </div>
-        <div class="chat-messages" id="chat-messages"></div>
-        <div class="chat-input">
-            <input type="text" id="message-input" placeholder="输入消息...">
-            <button id="send-button">发送</button>
-        </div>
+        <div id="loading" class="loading">正在处理中...</div>
     </div>
 
     <script>
-        const OPENAI_API_KEY = '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'; // 替换为你的 OpenAI API 密钥
-        const chatMessages = document.getElementById('chat-messages');
-        const messageInput = document.getElementById('message-input');
+        const API_KEY = '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';
+        const API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
+        let uploadedImages = [];
+        let conversationHistory = [
+            { role: "system", content: "You are a helpful assistant." }
+        ];
+        let isProcessing = false;
+
+        const fileInput = document.getElementById('file-input');
         const sendButton = document.getElementById('send-button');
+        fileInput.addEventListener('change', handleFiles);
+        document.addEventListener('paste', handlePaste);
 
-        function addMessage(message, isUser = false) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
-            
-            const messageContent = document.createElement('div');
-            messageContent.className = 'message-content';
-            messageContent.textContent = message;
-            
-            messageDiv.appendChild(messageContent);
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+        function handleFiles(e) {
+            const files = [...e.target.files];
+            files.forEach(processFile);
+            fileInput.value = '';
         }
 
-        function addLoadingIndicator() {
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'message bot-message';
-            loadingDiv.id = 'loading-message';
-            
-            const loadingContent = document.createElement('div');
-            loadingContent.className = 'message-content';
-            loadingContent.innerHTML = '思考中<div class="loading"><span></span><span></span><span></span></div>';
-            
-            loadingDiv.appendChild(loadingContent);
-            chatMessages.appendChild(loadingDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function removeLoadingIndicator() {
-            const loadingMessage = document.getElementById('loading-message');
-            if (loadingMessage) {
-                loadingMessage.remove();
+        function handlePaste(e) {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let item of items) {
+                if (item.type.indexOf('image') !== -1) {
+                    const file = item.getAsFile();
+                    processFile(file);
+                }
             }
         }
 
-        async function getGPTResponse(message) {
+        function processFile(file) {
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageData = e.target.result;
+                    uploadedImages.push(imageData);
+                    updateImagePreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateImagePreview() {
+            const preview = document.getElementById('image-preview');
+            preview.innerHTML = '';
+            uploadedImages.forEach((image, index) => {
+                const container = document.createElement('div');
+                container.className = 'preview-container';
+                
+                const img = document.createElement('img');
+                img.src = image;
+                img.className = 'preview-image';
+                
+                const removeButton = document.createElement('div');
+                removeButton.className = 'remove-image';
+                removeButton.innerHTML = '×';
+                removeButton.onclick = () => removeImage(index);
+                
+                container.appendChild(img);
+                container.appendChild(removeButton);
+                preview.appendChild(container);
+            });
+        }
+
+        function removeImage(index) {
+            uploadedImages.splice(index, 1);
+            updateImagePreview();
+        }
+
+        async function sendMessage() {
+            if (isProcessing) return;
+
+            const userInput = document.getElementById('user-input').value.trim();
+            if (!userInput && uploadedImages.length === 0) return;
+
+            isProcessing = true;
+            sendButton.disabled = true;
+
+            const chatBox = document.getElementById('chat-box');
+            const loading = document.getElementById('loading');
+
+            // 显示用户消息
+            appendMessage(userInput, true);
+            uploadedImages.forEach(image => {
+                appendImage(image, true);
+            });
+
+            // 准备消息
+            let userMessage;
+            if (uploadedImages.length > 0) {
+                const content = [];
+                if (userInput) {
+                    content.push({ type: "text", text: userInput });
+                }
+                uploadedImages.forEach(image => {
+                    content.push({
+                        type: "image_url",
+                        image_url: { url: image }
+                    });
+                });
+                userMessage = { role: "user", content: content };
+            } else {
+                userMessage = { role: "user", content: userInput };
+            }
+
+            // 添加到对话历史
+            conversationHistory.push(userMessage);
+
+            // 清空输入和图片
+            document.getElementById('user-input').value = '';
+            loading.style.display = 'block';
+
             try {
-                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                // 创建新的消息div用于流式输出
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message bot-message streaming';
+                chatBox.appendChild(messageDiv);
+
+                const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${OPENAI_API_KEY}`
+                        'Authorization': `Bearer ${API_KEY}`
                     },
                     body: JSON.stringify({
-                        model: "gpt-4",
-                        messages: [{
-                            role: "user",
-                            content: message
-                        }],
-                        temperature: 0.7
+                        model: "gpt-4o",
+                        messages: conversationHistory,
+                        max_tokens: 4000,
+                        temperature: 0.7,
+                        stream: true
                     })
                 });
 
-                const data = await response.json();
-                return data.choices[0].message.content;
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullResponse = '';
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+                            try {
+                                const jsonData = JSON.parse(line.slice(6));
+                                if (jsonData.choices[0].delta.content) {
+                                    buffer += jsonData.choices[0].delta.content;
+                                    
+                                    // 每积累一定字符或遇到换行符时更新显示
+                                    if (buffer.length > 4 || buffer.includes('\n')) {
+                                        fullResponse += buffer;
+                                        messageDiv.innerHTML = marked.parse(fullResponse);
+                                        
+                                        if (window.MathJax) {
+                                            MathJax.typesetPromise([messageDiv]).catch((err) => console.log(err));
+                                        }
+                                        
+                                        buffer = '';
+                                        chatBox.scrollTop = chatBox.scrollHeight;
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('Error parsing JSON:', e);
+                            }
+                        }
+                    }
+                }
+
+                // 确保最后的缓冲区内容也被显示
+                if (buffer) {
+                    fullResponse += buffer;
+                    messageDiv.innerHTML = marked.parse(fullResponse);
+                    if (window.MathJax) {
+                        MathJax.typesetPromise([messageDiv]).catch((err) => console.log(err));
+                    }
+                }
+
+                // 移除流式输出的光标效果
+                messageDiv.classList.remove('streaming');
+
+                // 将完整响应添加到对话历史
+                conversationHistory.push({
+                    role: "assistant",
+                    content: fullResponse
+                });
+
             } catch (error) {
                 console.error('Error:', error);
-                return '抱歉，发生了一些错误。请稍后再试。';
+                appendMessage('抱歉，发生错误，请稍后重试。', false);
             }
+
+            loading.style.display = 'none';
+            uploadedImages = [];
+            updateImagePreview();
+            chatBox.scrollTop = chatBox.scrollHeight;
+            isProcessing = false;
+            sendButton.disabled = false;
         }
 
-        async function handleMessage() {
-            const message = messageInput.value.trim();
-            if (message) {
-                addMessage(message, true);
-                messageInput.value = '';
-                messageInput.disabled = true;
-                sendButton.disabled = true;
-
-                addLoadingIndicator();
-
-                const response = await getGPTResponse(message);
-                removeLoadingIndicator();
-                addMessage(response);
-
-                messageInput.disabled = false;
-                sendButton.disabled = false;
-                messageInput.focus();
+        function appendMessage(message, isUser) {
+            if (!message) return;
+            const chatBox = document.getElementById('chat-box');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            
+            if (isUser) {
+                messageDiv.textContent = message;
+            } else {
+                messageDiv.innerHTML = marked.parse(message);
+                if (window.MathJax) {
+                    MathJax.typesetPromise([messageDiv]).catch((err) => console.log(err));
+                }
             }
+            
+            chatBox.appendChild(messageDiv);
         }
 
-        sendButton.addEventListener('click', handleMessage);
-        messageInput.addEventListener('keypress', (e) => {
+        function appendImage(imageUrl, isUser) {
+            const chatBox = document.getElementById('chat-box');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            const image = document.createElement('img');
+            image.src = imageUrl;
+            image.className = 'chat-image';
+            messageDiv.appendChild(image);
+            chatBox.appendChild(messageDiv);
+        }
+
+        // 支持按Enter发送消息
+        document.getElementById('user-input').addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                handleMessage();
+                sendMessage();
             }
         });
-
-        // 添加欢迎消息
-        addMessage("你好！我是基于GPT的AI助手，有什么我可以帮你的吗？");
     </script>
 </body>
 </html>
