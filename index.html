@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPT-4  聊天机器人</title>
+    <title>GPT-4对话助手</title>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -14,9 +14,9 @@
             box-sizing: border-box;
         }
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             line-height: 1.6;
-            padding: 20px;
+            padding: 10px;
             max-width: 800px;
             margin: 0 auto;
             background: #f5f5f5;
@@ -24,37 +24,47 @@
         .container {
             background: white;
             border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 10px auto;
+        }
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #1a73e8;
         }
         #chat-box {
-            height: 400px;
+            height: calc(100vh - 250px);
+            min-height: 300px;
             overflow-y: auto;
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #fafafa;
         }
         .message {
-            margin-bottom: 10px;
-            padding: 8px;
-            border-radius: 5px;
+            margin-bottom: 12px;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 85%;
             word-wrap: break-word;
         }
         .user-message {
             background: #e3f2fd;
-            margin-left: 20%;
+            margin-left: auto;
+            color: #1565c0;
         }
         .bot-message {
             background: #f5f5f5;
-            margin-right: 20%;
-            font-size: 14px;
-            line-height: 1.6;
+            margin-right: auto;
+            color: #333;
         }
         .input-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
         .input-row {
             display: flex;
@@ -63,36 +73,43 @@
         }
         #user-input {
             flex: 1;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
             resize: vertical;
             min-height: 60px;
+            font-size: 14px;
         }
         .action-button {
-            padding: 8px;
-            background: #1976d2;
-            color: white;
+            padding: 8px 16px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            height: 40px;
+            min-width: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-width: 40px;
-            height: 40px;
         }
-        .action-button:hover {
-            background: #1565c0;
+        #send-button {
+            background: #1a73e8;
+            color: white;
         }
-        .action-button:disabled {
+        #send-button:hover {
+            background: #1557b0;
+        }
+        #send-button:disabled {
             background: #ccc;
             cursor: not-allowed;
         }
         .loading {
             display: none;
-            margin: 10px 0;
             color: #666;
+            text-align: center;
+            padding: 10px;
+            font-style: italic;
         }
         #image-preview {
             display: flex;
@@ -133,71 +150,48 @@
             margin: 5px 0;
         }
         .add-image-button {
+            background: #34a853;
+            color: white;
             font-size: 24px;
-            line-height: 1;
+        }
+        .add-image-button:hover {
+            background: #2d8a46;
         }
         #file-input {
             display: none;
         }
-        /* Markdown 样式 */
-        .bot-message h3 {
-            margin: 15px 0 10px 0;
-            color: #2c3e50;
-        }
-        .bot-message ul, .bot-message ol {
-            margin-left: 20px;
-            margin-bottom: 10px;
-        }
-        .bot-message p {
-            margin-bottom: 10px;
-        }
-        .bot-message strong {
-            color: #2c3e50;
-        }
-        .math {
-            font-family: 'Computer Modern', serif;
-        }
-        code {
-            background: #f8f9fa;
-            padding: 2px 4px;
-            border-radius: 3px;
-            font-family: monospace;
-        }
-        blockquote {
-            border-left: 4px solid #ddd;
-            padding-left: 10px;
-            margin: 10px 0;
-            color: #666;
-        }
+        /* 其他样式保持不变 */
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>GPT-4 Vision 聊天机器人</h1>
+        <h1>GPT4对话助手</h1>
         <div id="chat-box"></div>
         <div class="input-container">
             <div id="image-preview"></div>
             <div class="input-row">
-                <textarea id="user-input" placeholder="输入您的消息..."></textarea>
-                <input type="file" id="file-input" accept="image/*" multiple>
                 <button class="action-button add-image-button" onclick="document.getElementById('file-input').click()">+</button>
+                <textarea id="user-input" placeholder="请输入您的问题..."></textarea>
                 <button id="send-button" class="action-button" onclick="sendMessage()">发送</button>
             </div>
+            <input type="file" id="file-input" accept="image/*" multiple>
         </div>
-        <div id="loading" class="loading">正在处理中...</div>
+        <div id="loading" class="loading">正在思考中...</div>
     </div>
 
     <script>
-        const API_KEY = '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';
-        const API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
-        let uploadedImages = [];
+        // 配置 Worker URL（部署后需要修改）
+		const WORKER_URL = 'https://yellow-water-e4de.zijiangao-mail.workers.dev/';
+        
+        // 初始化变量
         let conversationHistory = [
             { role: "system", content: "You are a helpful assistant." }
         ];
         let isProcessing = false;
+        let uploadedImages = [];
 
+        // 处理图片上传
         const fileInput = document.getElementById('file-input');
-        const sendButton = document.getElementById('send-button');
         fileInput.addEventListener('change', handleFiles);
         document.addEventListener('paste', handlePaste);
 
@@ -256,6 +250,7 @@
             updateImagePreview();
         }
 
+        // 发送消息函数
         async function sendMessage() {
             if (isProcessing) return;
 
@@ -263,6 +258,7 @@
             if (!userInput && uploadedImages.length === 0) return;
 
             isProcessing = true;
+            const sendButton = document.getElementById('send-button');
             sendButton.disabled = true;
 
             const chatBox = document.getElementById('chat-box');
@@ -274,7 +270,7 @@
                 appendImage(image, true);
             });
 
-            // 准备消息
+            // 准备发送的消息内容
             let userMessage;
             if (uploadedImages.length > 0) {
                 const content = [];
@@ -292,34 +288,33 @@
                 userMessage = { role: "user", content: userInput };
             }
 
+            // 清空输入
+            document.getElementById('user-input').value = '';
+            loading.style.display = 'block';
+            uploadedImages = [];
+            updateImagePreview();
+
             // 添加到对话历史
             conversationHistory.push(userMessage);
 
-            // 清空输入和图片
-            document.getElementById('user-input').value = '';
-            loading.style.display = 'block';
-
             try {
-                // 创建新的消息div用于流式输出
+                // 创建消息div用于流式输出
                 const messageDiv = document.createElement('div');
-                messageDiv.className = 'message bot-message streaming';
+                messageDiv.className = 'message bot-message';
                 chatBox.appendChild(messageDiv);
 
-                const response = await fetch(API_ENDPOINT, {
+                // 发送请求到 Worker
+                const response = await fetch(WORKER_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`
                     },
                     body: JSON.stringify({
-                        model: "gpt-4o",
-                        messages: conversationHistory,
-                        max_tokens: 4000,
-                        temperature: 0.7,
-                        stream: true
+                        messages: conversationHistory
                     })
                 });
 
+                // 处理流式响应
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let fullResponse = '';
@@ -339,7 +334,6 @@
                                 if (jsonData.choices[0].delta.content) {
                                     buffer += jsonData.choices[0].delta.content;
                                     
-                                    // 每积累一定字符或遇到换行符时更新显示
                                     if (buffer.length > 4 || buffer.includes('\n')) {
                                         fullResponse += buffer;
                                         messageDiv.innerHTML = marked.parse(fullResponse);
@@ -359,7 +353,6 @@
                     }
                 }
 
-                // 确保最后的缓冲区内容也被显示
                 if (buffer) {
                     fullResponse += buffer;
                     messageDiv.innerHTML = marked.parse(fullResponse);
@@ -368,10 +361,6 @@
                     }
                 }
 
-                // 移除流式输出的光标效果
-                messageDiv.classList.remove('streaming');
-
-                // 将完整响应添加到对话历史
                 conversationHistory.push({
                     role: "assistant",
                     content: fullResponse
@@ -383,13 +372,12 @@
             }
 
             loading.style.display = 'none';
-            uploadedImages = [];
-            updateImagePreview();
             chatBox.scrollTop = chatBox.scrollHeight;
             isProcessing = false;
             sendButton.disabled = false;
         }
 
+        // 添加消息到聊天框
         function appendMessage(message, isUser) {
             if (!message) return;
             const chatBox = document.getElementById('chat-box');
@@ -406,8 +394,10 @@
             }
             
             chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
+        // 添加图片到聊天框
         function appendImage(imageUrl, isUser) {
             const chatBox = document.getElementById('chat-box');
             const messageDiv = document.createElement('div');
@@ -417,10 +407,11 @@
             image.className = 'chat-image';
             messageDiv.appendChild(image);
             chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // 支持按Enter发送消息
-        document.getElementById('user-input').addEventListener('keypress', function(e) {
+        // 支持按Enter发送消息（Shift+Enter换行）
+        document.getElementById('user-input').addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
